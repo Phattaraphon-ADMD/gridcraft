@@ -1129,6 +1129,74 @@ pub(super) fn translate(text: &str) -> Option<&'static str> {
         "Stock" => "หุ้น",
         "Bar" => "แท่ง",
         "Drag to fill cells. Drag from inside a cell to select a range." => "ลากเพื่อเติมเซลล์ ลากจากภายในเซลล์เพื่อเลือกช่วง",
+        "Calculated Field…" => "เขตข้อมูลจากการคำนวณ…",
+        "Choose fields to add to report:" => "เลือกเขตข้อมูลที่จะเพิ่มลงในรายงาน:",
+        "Compact" => "แบบกะทัดรัด",
+        "Copies" => "จำนวนสำเนา",
+        "End date:" => "วันที่สิ้นสุด:",
+        "Filters" => "ตัวกรอง",
+        "Finding printers…" => "กำลังค้นหาเครื่องพิมพ์…",
+        "Forecast start (a date or number in the history; blank: after the last point):" => {
+            "จุดเริ่มต้นการพยากรณ์ (วันที่หรือตัวเลขในข้อมูลย้อนหลัง; ว่าง: หลังจุดสุดท้าย):"
+        }
+        "Grayscale" => "ระดับสีเทา",
+        "Group by Months" => "จัดกลุ่มตามเดือน",
+        "Group by Quarters" => "จัดกลุ่มตามไตรมาส",
+        "Group by Years" => "จัดกลุ่มตามปี",
+        "Header (&L left, &C center, &R right; &P page, &N pages, &D date, &A sheet):" => {
+            "หัวกระดาษ (&L ซ้าย, &C กลาง, &R ขวา; &P หน้า, &N จำนวนหน้า, &D วันที่, &A แผ่นงาน):"
+        }
+        "Move to Column Labels" => "ย้ายไปยังป้ายชื่อคอลัมน์",
+        "Move to Report Filter" => "ย้ายไปยังตัวกรองรายงาน",
+        "Move to Row Labels" => "ย้ายไปยังป้ายชื่อแถว",
+        "Move to Values" => "ย้ายไปยังค่า",
+        "No printers found. Configure a system printer or export a PDF." => "ไม่พบเครื่องพิมพ์ ตั้งค่าเครื่องพิมพ์ในระบบหรือส่งออกเป็น PDF",
+        "One-sided" => "พิมพ์หน้าเดียว",
+        "Options|Editing" => "การแก้ไข",
+        "PivotTable Fields" => "เขตข้อมูล PivotTable",
+        "Print failed: the printing worker stopped." => "พิมพ์ไม่สำเร็จ: ตัวประมวลผลการพิมพ์หยุดทำงาน",
+        "Print failed: {error}" => "พิมพ์ไม่สำเร็จ: {error}",
+        "Print job submitted." => "ส่งงานพิมพ์แล้ว",
+        "Print job submitted: {receipt}" => "ส่งงานพิมพ์แล้ว: {receipt}",
+        "Printer" => "เครื่องพิมพ์",
+        "Printer default" => "ค่าเริ่มต้นของเครื่องพิมพ์",
+        "Printer discovery failed." => "ค้นหาเครื่องพิมพ์ไม่สำเร็จ",
+        "Protect workbook for: Structure (sheets can't be added, moved, renamed, hidden or deleted)." => {
+            "ป้องกันโครงสร้างสมุดงาน (ไม่สามารถเพิ่ม ย้าย เปลี่ยนชื่อ ซ่อน หรือลบแผ่นงานได้)"
+        }
+        "Refresh" => "รีเฟรช",
+        "Refresh printers" => "ค้นหาเครื่องพิมพ์อีกครั้ง",
+        "Remove Field" => "เอาเขตข้อมูลออก",
+        "Report Layout" => "เค้าโครงรายงาน",
+        "Select a printer" => "เลือกเครื่องพิมพ์",
+        "Show as % of Grand Total" => "แสดงเป็น % ของผลรวมทั้งหมด",
+        "Show as No Calculation" => "แสดงโดยไม่คำนวณ",
+        "Show as Rank" => "แสดงเป็นอันดับ",
+        "Show as Running Total" => "แสดงเป็นยอดรวมสะสม",
+        "Source:" => "แหล่งข้อมูล:",
+        "Submitting print job…" => "กำลังส่งงานพิมพ์…",
+        "Summarize by Average" => "สรุปด้วยค่าเฉลี่ย",
+        "Summarize by Count" => "สรุปด้วยจำนวน",
+        "Summarize by Max" => "สรุปด้วยค่าสูงสุด",
+        "Summarize by Min" => "สรุปด้วยค่าต่ำสุด",
+        "Summarize by Sum" => "สรุปด้วยผลรวม",
+        "Tabular" => "แบบตาราง",
+        "Two-sided printing" => "การพิมพ์สองหน้า",
+        "Two-sided: long edge" => "พิมพ์สองหน้า: พลิกตามขอบยาว",
+        "Two-sided: short edge" => "พิมพ์สองหน้า: พลิกตามขอบสั้น",
+        "Use a field's menu to move it between areas:" => "ใช้เมนูของเขตข้อมูลเพื่อย้ายระหว่างพื้นที่:",
+        "Values" => "ค่า",
+        "Auto Fill Options" => "ตัวเลือกการเติมอัตโนมัติ",
+        "Constraint Operator" => "ตัวดำเนินการของข้อจำกัด",
+        "Could not check for updates: {error}" => "ตรวจสอบการอัปเดตไม่ได้: {error}",
+        "GridCraft {version} is up to date." => "GridCraft {version} เป็นเวอร์ชันล่าสุดแล้ว",
+        "Locking cells or hiding formulas has no effect until you protect the worksheet (Review › Protect Sheet)." => {
+            "การล็อกเซลล์หรือซ่อนสูตรจะไม่มีผลจนกว่าจะป้องกันแผ่นงาน (ตรวจทาน › ป้องกันแผ่นงาน)"
+        }
+        "Paste List" => "วางรายการ",
+        "Paste name" => "วางชื่อ",
+        "Paste Names…" => "วางชื่อ…",
+        "Split tabs" => "แบ่งพื้นที่แท็บ",
         _ => return None,
     })
 }

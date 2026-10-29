@@ -498,16 +498,25 @@ mod tests {
     fn thai_reference_translations_preserve_shape() {
         let placeholders =
             |text: &str| text.split('{').skip(1).filter_map(|rest| rest.split_once('}').map(|(name, _)| name.to_string())).collect::<Vec<_>>();
-        for (english, _) in ja::CORE.iter().chain(ja::DIALOGS).chain(ja::EXTRA) {
+        let keys = ja::CORE.iter().chain(ja::DIALOGS).chain(ja::EXTRA).map(|(english, _)| *english).chain([
+            "Print failed: {error}",
+            "Print job submitted: {receipt}",
+            "Could not check for updates: {error}",
+            "GridCraft {version} is up to date.",
+        ]);
+        for english in keys {
             if let Some(text) = th::translate(english) {
-                let label = english.rsplit_once('|').map_or(*english, |(_, label)| label);
+                let label = english.rsplit_once('|').map_or(english, |(_, label)| label);
                 assert_eq!(placeholders(text), placeholders(label), "{english:?} => {text:?}");
                 assert!(!text.contains('|'), "{english:?} => {text:?}");
-                if !label.contains('\n') && !["AutoSum", "PivotTable"].contains(english) {
+                if !label.contains('\n') && !["AutoSum", "PivotTable"].contains(&english) {
                     assert!(!text.contains('\n'), "{english:?} => {text:?}");
                 }
             }
         }
+        let header = "Header (&L left, &C center, &R right; &P page, &N pages, &D date, &A sheet):";
+        let codes = |text: &str| text.split('&').skip(1).filter_map(|part| part.chars().next()).collect::<Vec<_>>();
+        assert_eq!(codes(Language::Th.tr(header)), codes(header));
     }
 
     #[test]
