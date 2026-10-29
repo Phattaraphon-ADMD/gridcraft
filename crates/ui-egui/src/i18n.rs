@@ -24,6 +24,7 @@ mod pt;
 mod ro;
 mod ru;
 mod sr;
+mod th;
 mod tr;
 mod uk;
 mod vi;
@@ -53,10 +54,11 @@ pub enum Language {
     Vi,
     Nl,
     Ro,
+    Th,
 }
 
 impl Language {
-    pub const ALL: [Self; 19] = [
+    pub const ALL: [Self; 20] = [
         Self::En,
         Self::Es,
         Self::El,
@@ -75,6 +77,7 @@ impl Language {
         Self::Vi,
         Self::Nl,
         Self::Ro,
+        Self::Th,
         Self::Tr,
     ];
 
@@ -109,6 +112,7 @@ impl Language {
             Self::Vi => "Tiếng Việt",
             Self::Nl => "Nederlands",
             Self::Ro => "Română",
+            Self::Th => "ไทย",
         }
     }
 
@@ -134,6 +138,7 @@ impl Language {
             Self::Vi => "vi",
             Self::Nl => "nl",
             Self::Ro => "ro",
+            Self::Th => "th",
         }
     }
 
@@ -168,6 +173,7 @@ impl Language {
             "vi" => Some(Self::Vi),
             "nl" => Some(Self::Nl),
             "ro" => Some(Self::Ro),
+            "th" => Some(Self::Th),
             _ => None,
         }
     }
@@ -214,6 +220,7 @@ impl Language {
             Self::Vi => vi::translate(text),
             Self::Nl => nl::translate(text),
             Self::Ro => ro::translate(text),
+            Self::Th => th::translate(text),
         };
         translated.unwrap_or_else(|| text.rsplit_once('|').map_or(text, |(_, label)| label))
     }
@@ -474,7 +481,35 @@ mod tests {
         assert_eq!(Language::from_tag("ro-RO"), Some(Language::Ro));
         assert_eq!(Language::from_tag("ro_MD.UTF-8"), Some(Language::Ro));
         assert_eq!(Language::parse("ro"), Some(Language::Ro));
+        assert_eq!(Language::from_tag("th-TH"), Some(Language::Th));
+        assert_eq!(Language::from_tag("th_TH.UTF-8"), Some(Language::Th));
+        assert_eq!(Language::parse("th"), Some(Language::Th));
     }
+
+    #[test]
+    fn thai_translations_and_fallback() {
+        assert_eq!(Language::Th.tr("Home"), "หน้าแรก");
+        assert_eq!(Language::Th.tr("Cell"), "เซลล์");
+        assert_eq!(Language::Th.tr("Unknown|Untranslated"), "Untranslated");
+        assert_eq!(saved_language(&serde_json::json!({"language": "th"})), Some(Language::Th));
+    }
+
+    #[test]
+    fn thai_reference_translations_preserve_shape() {
+        let placeholders =
+            |text: &str| text.split('{').skip(1).filter_map(|rest| rest.split_once('}').map(|(name, _)| name.to_string())).collect::<Vec<_>>();
+        for (english, _) in ja::CORE.iter().chain(ja::DIALOGS).chain(ja::EXTRA) {
+            if let Some(text) = th::translate(english) {
+                let label = english.rsplit_once('|').map_or(*english, |(_, label)| label);
+                assert_eq!(placeholders(text), placeholders(label), "{english:?} => {text:?}");
+                assert!(!text.contains('|'), "{english:?} => {text:?}");
+                if !label.contains('\n') && !["AutoSum", "PivotTable"].contains(english) {
+                    assert!(!text.contains('\n'), "{english:?} => {text:?}");
+                }
+            }
+        }
+    }
+
     #[test]
     fn an_unset_language_preference_is_english_until_the_app_applies_the_system_one() {
         // Deserializing never reads the host locale (tests stay deterministic); the desktop app
