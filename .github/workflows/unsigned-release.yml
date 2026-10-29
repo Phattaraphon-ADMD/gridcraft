@@ -1,0 +1,113 @@
+name: Build Unsigned Release
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: unsigned-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - id: version
+        shell: bash
+        run: |
+          version=$(python3 -c 'import tomllib; print(tomllib.load(open("Cargo.toml", "rb"))["workspace"]["package"]["version"])')
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: version
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: windows-latest
+            platform: windows-x64
+            extension: .exe
+          - runner: ubuntu-22.04
+            platform: linux-x86_64
+            extension: ""
+          - runner: macos-15
+            platform: macos-arm64
+            extension: ""
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          repository: storytold/craft-fonts
+          ref: b076417b5880bd4154bd22f00695b1d28c6bea83
+          path: craft-fonts
+      - if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends pkg-config libxkbcommon-dev libwayland-dev libx11-dev libxcursor-dev libxrandr-dev libxi-dev libgtk-3-dev libfontconfig1-dev libfreetype-dev libgl1-mesa-dev libasound2-dev
+      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8
+        with:
+          toolchain: stable
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0
+      - name: Build release binaries
+        run: cargo build --release --locked -p gridcraft -p gridcraft-cli
+        env:
+          CRAFT_FONTS_DIR: ${{ github.workspace }}/craft-fonts
+          CRAFT_FONTS_REQUIRED: "1"
+      - name: Archive Windows binaries
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          EXTENSION: ${{ matrix.extension }}
+          PLATFORM: ${{ matrix.platform }}
+          VERSION: ${{ needs.version.outputs.version }}
+        run: |
+          Compress-Archive -Path "target/release/gridcraft$env:EXTENSION", "target/release/gridcraft-cli$env:EXTENSION" -DestinationPath "gridcraft-$env:VERSION-$env:PLATFORM.zip"
+      - name: Archive Unix binaries
+        if: runner.os != 'Windows'
+        shell: bash
+        env:
+          PLATFORM: ${{ matrix.platform }}
+          VERSION: ${{ needs.version.outputs.version }}
+        run: tar -C target/release -czf "gridcraft-$VERSION-$PLATFORM.tar.gz" gridcraft gridcraft-cli
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: unsigned-${{ matrix.platform }}
+          path: gridcraft-${{ needs.version.outputs.version }}-${{ matrix.platform }}.*
+          if-no-files-found: error
+
+  release:
+    needs: [version, build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
+        with:
+          pattern: unsigned-*
+          path: release-assets
+          merge-multiple: true
+      - name: Publish GitHub Release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          tag="v$VERSION"
+          if git ls-remote --exit-code --tags origin "refs/tags/$tag" >/dev/null; then
+            echo "::error::Tag $tag already exists; bump the version before creating a release."
+            exit 1
+          else
+            status=$?
+            if [ "$status" -ne 2 ]; then exit "$status"; fi
+          fi
+          prerelease=()
+          if [[ "$VERSION" == *-* ]]; then prerelease+=(--prerelease); fi
+          gh release create "$tag" release-assets/* --target "$GITHUB_SHA" --title "GridCraft $tag" --notes "These binaries are unsigned and are not notarized." --generate-notes "${prerelease[@]}"

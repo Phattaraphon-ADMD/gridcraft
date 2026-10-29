@@ -1,6 +1,6 @@
 # Releasing GridCraft
 
-Every push to the `release` branch runs `.github/workflows/release.yml`. The workflow builds
+Every push to the `release` branch, or a manual run of **Build Release**, runs `.github/workflows/release.yml`. The workflow builds
 signed installers for macOS, Windows, Linux, FreeBSD and the web, then creates or updates a
 **draft** GitHub Release named `GridCraft v<version>`. Nobody sees a draft until a maintainer
 publishes it.
@@ -64,13 +64,33 @@ The pipeline references crates that don't exist yet; the first release run fails
 Pushing to `release` again before you publish rebuilds the same draft and replaces its assets.
 After the draft is published, the workflow refuses to touch that version again, so bump first.
 
-**Test runs:** *Actions → Release → Run workflow* runs the whole pipeline by hand. The optional
-`version` input (such as `0.2.0-rc.1`) overrides `Cargo.toml` for that run only; each job
-applies it with `cargo xtask version set` before building, so the binaries report it too. The
-signing jobs and the draft release need the `release` environment, which only the `release`
-branch can use. Run from any other branch, it's a dry run: Linux, Flatpak, FreeBSD and web build
-and upload their artifacts, the environment refuses macOS and Windows, and no release is drafted
-(`gh workflow run release.yml --ref <branch>`).
+**Manual builds:** On GitHub, open *Actions → Build Release → Run workflow*, select the `release`
+branch, optionally enter a `version`, and select **Run workflow**. The workflow must exist on the
+repository's default branch for the button to appear. Leave `version` blank to use `Cargo.toml`,
+or enter a version such as `0.2.0-rc.1` to override it for this run; build jobs apply the override
+before compiling. Successful jobs upload their packages as workflow artifacts, and a successful
+release-branch run creates or updates a draft GitHub Release. It does not publish the draft.
+
+For a build from another branch, use the same button or `gh workflow run release.yml --ref <branch>`.
+With the required `release` environment branch restriction configured, macOS, Windows and the
+draft job cannot run there; other build jobs can still upload artifacts. This restriction is a
+repository setting, not a workflow check: without it a non-release branch can create a draft.
+The full release-branch build requires the macOS and Windows signing credentials below.
+
+### Unsigned manual release
+
+For a simpler release without signing secrets, open *Actions → Build Unsigned Release → Run
+workflow*, select the branch to build, and select **Run workflow**. The workflow must exist on
+the default branch before the button appears. It builds `gridcraft` and `gridcraft-cli` with
+`cargo build --release --locked` and publishes a GitHub Release when all builds succeed. The
+version comes from the selected branch's `Cargo.toml`; its `v<version>` tag must not already
+exist. Versions with a prerelease suffix are published as prereleases.
+
+The release contains a Windows x64 ZIP, a Linux x86_64 tarball and a macOS Apple silicon tarball.
+These are binaries, not installers, and are unsigned; macOS binaries are not notarized. The Linux
+binary needs the usual system graphics libraries. The workflow uses GitHub's built-in
+`GITHUB_TOKEN` with `contents: write`, so repository Actions settings must permit that permission.
+It does not use or change the signed release workflow above.
 
 ## What gets built
 
@@ -204,10 +224,11 @@ any path and in an iframe; the script fails on root-absolute URLs.
 ## Secrets and GitHub setup (org admin, once)
 
 All signing secrets live in the repository's **`release` environment**, deployable only from the
-`release` branch; a ruleset restricts who can push that branch. Every job in `release.yml`
-declares `environment: release`; the FreeBSD job is a called workflow and needs no secrets.
-Each secret is optional: if one is missing that platform's artifacts are unsigned and the run
-shows a `::warning::`. Never store these as org- or repo-level Actions secrets (playbook §3).
+`release` branch; a ruleset restricts who can push that branch. The shared workflow's macOS,
+Windows and draft jobs use that environment; the other build jobs do not need signing secrets.
+On the `release` branch, the shared workflow fails if the macOS signing secrets are missing, or
+if neither the Windows certificate pair nor all Azure signing values are available. Never store
+these as org- or repo-level Actions secrets (playbook §3).
 
 | Secret | Used for |
 |---|---|
